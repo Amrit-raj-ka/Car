@@ -32,6 +32,10 @@ const ctx = canvas.getContext("2d");
 canvas.width = 350;
 canvas.height = 600;
 
+//Load car image
+const carImg = new Image();
+carImg.src = "images/car.png";
+
 let car = {
     x:150,
     y:500,
@@ -106,8 +110,7 @@ function draw(){
         car.x += car.speed;
 
     // Draw car
-    ctx.fillStyle="red";
-    ctx.fillRect(car.x,car.y,car.width,car.height);
+    ctx.drawImage(carImg, car.x, car.y, car.width, car.height);
 
     // Obstacles
     obstacles.forEach((ob,index)=>{
@@ -141,7 +144,10 @@ function draw(){
     requestAnimationFrame(draw);
 }
 
+// Start game only after image loads
+carImg.onload = function(){
 draw();
+};
 </script>
 
 </body>
