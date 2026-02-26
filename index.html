@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>INSANE SPEED MODE</title>
   <style>
     body {
@@ -33,10 +34,22 @@ function createGame(canvasId, controls) {
   canvas.height = 600;
 
   const playerImg = new Image();
-  playerImg.src = "image/car.png";
+const enemyImg = new Image();
 
-  const enemyImg = new Image();
-  enemyImg.src = "image/problem.png";
+let imagesLoaded = 0;
+
+function checkImagesLoaded() {
+  imagesLoaded++;
+  if (imagesLoaded === 2) {
+    draw(); // start game ONLY after images load
+  }
+}
+
+playerImg.onload = checkImagesLoaded;
+enemyImg.onload = checkImagesLoaded;
+
+playerImg.src = "image/car.png";
+enemyImg.src = "image/problem.png";
 
   let car = { x: 150, y: 500, width: 50, height: 90, speed: 8 };
   let obstacles = [];
@@ -144,7 +157,7 @@ function createGame(canvasId, controls) {
   }
 
   let spawnInterval = setInterval(spawnObstacle, spawnRate);
-  draw();
+  
 
   return {
     isGameOver: () => gameOver,
@@ -156,7 +169,7 @@ function createGame(canvasId, controls) {
       gameOver = false;
       clearInterval(spawnInterval);
       spawnInterval = setInterval(spawnObstacle, spawnRate);
-      draw();
+     
     }
   };
 }
@@ -207,5 +220,6 @@ document.addEventListener("keydown", e => {
 
 </body>
 </html>
+
 
 
