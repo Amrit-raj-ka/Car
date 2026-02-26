@@ -165,6 +165,24 @@ function createGame(canvasId, controls) {
 let keys = {};
 document.addEventListener("keydown", e => keys[e.key] = true);
 document.addEventListener("keyup", e => keys[e.key] = false);
+  // Mobile Touch Controls
+document.addEventListener("touchstart", function(e) {
+    const screenWidth = window.innerWidth;
+    const touchX = e.touches[0].clientX;
+
+    if (touchX < screenWidth / 2) {
+        // Left side touched
+        keys["ArrowLeft"] = true;
+    } else {
+        // Right side touched
+        keys["ArrowRight"] = true;
+    }
+});
+
+document.addEventListener("touchend", function() {
+    keys["ArrowLeft"] = false;
+    keys["ArrowRight"] = false;
+});
 
 // Left Player (WASD)
 const game1 = createGame("game1", {
@@ -189,3 +207,4 @@ document.addEventListener("keydown", e => {
 
 </body>
 </html>
+
