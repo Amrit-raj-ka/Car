@@ -16,6 +16,20 @@
     }
     canvas {
       background: #222;
+      width: 45vw;      /* responsive width */
+    height: 80vh;     /* responsive height */
+  }
+
+  /* MOBILE FIX */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+    }
+
+    canvas {
+      width: 90vw;
+      height: 40vh;
+    }
     }
   </style>
 </head>
@@ -30,8 +44,8 @@ function createGame(canvasId, controls) {
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext("2d");
 
-  canvas.width = 350;
-  canvas.height = 600;
+ canvas.width = canvas.clientWidth;
+canvas.height = canvas.clientHeight;
 
  const playerImg = new Image();
 const enemyImg = new Image();
@@ -221,6 +235,7 @@ document.addEventListener("keydown", e => {
 
 </body>
 </html>
+
 
 
 
