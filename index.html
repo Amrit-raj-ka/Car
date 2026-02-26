@@ -33,23 +33,14 @@ function createGame(canvasId, controls) {
   canvas.width = 350;
   canvas.height = 600;
 
-  const playerImg = new Image();
+ const playerImg = new Image();
 const enemyImg = new Image();
-
-let imagesLoaded = 0;
-
-function checkImagesLoaded() {
-  imagesLoaded++;
-  if (imagesLoaded === 2) {
-    draw(); // start game ONLY after images load
-  }
-}
-
-playerImg.onload = checkImagesLoaded;
-enemyImg.onload = checkImagesLoaded;
 
 playerImg.src = "image/car.png";
 enemyImg.src = "image/problem.png";
+
+// Start game immediately
+draw();
 
   let car = { x: 150, y: 500, width: 50, height: 90, speed: 8 };
   let obstacles = [];
@@ -134,9 +125,19 @@ enemyImg.src = "image/problem.png";
     updateCar();
     updateObstacles();
 
-    ctx.drawImage(playerImg, car.x, car.y, car.width, car.height);
+    if (playerImg.complete && playerImg.naturalWidth !== 0) {
+  ctx.drawImage(playerImg, car.x, car.y, car.width, car.height);
+} else {
+  ctx.fillStyle = "red";
+  ctx.fillRect(car.x, car.y, car.width, car.height);
+}
     obstacles.forEach(ob => {
-      ctx.drawImage(enemyImg, ob.x, ob.y, ob.width, ob.height);
+    if (enemyImg.complete && enemyImg.naturalWidth !== 0) {
+  ctx.drawImage(enemyImg, ob.x, ob.y, ob.width, ob.height);
+} else {
+  ctx.fillStyle = "blue";
+  ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+}
     });
 
     ctx.fillStyle = "white";
@@ -220,6 +221,7 @@ document.addEventListener("keydown", e => {
 
 </body>
 </html>
+
 
 
 
