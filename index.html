@@ -2,22 +2,25 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simple Car Game</title>
-<style>
-  body {
-    margin: 0;
-    background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
+<title>INSANE SPEED MODE</title>
 
-  canvas {
-    background: #222;
-  }
+<style>
+body{
+    margin:0;
+    background:black;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    overflow:hidden;
+}
+
+canvas{
+    background:#222;
+}
 </style>
 </head>
+
 <body>
 
 <canvas id="game"></canvas>
@@ -29,45 +32,113 @@ const ctx = canvas.getContext("2d");
 canvas.width = 350;
 canvas.height = 600;
 
-let car = { x: 150, y: 500, width: 50, height: 90 };
+let car = {
+    x:150,
+    y:500,
+    width:50,
+    height:90,
+    speed:8
+};
+
+let obstacles = [];
+let roadOffset = 0;
+let score = 0;
+let gameOver = false;
+
 let keys = {};
 
+// Keyboard controls
 document.addEventListener("keydown", e => keys[e.key] = true);
 document.addEventListener("keyup", e => keys[e.key] = false);
 
-// Mobile touch
-document.addEventListener("touchstart", e => {
-  const x = e.touches[0].clientX;
-  if (x < window.innerWidth / 2) keys["ArrowLeft"] = true;
-  else keys["ArrowRight"] = true;
+// Mobile touch controls
+document.addEventListener("touchstart", function(e){
+    const touchX = e.touches[0].clientX;
+    if(touchX < window.innerWidth/2){
+        keys["ArrowLeft"] = true;
+    }else{
+        keys["ArrowRight"] = true;
+    }
 });
 
-document.addEventListener("touchend", () => {
-  keys["ArrowLeft"] = false;
-  keys["ArrowRight"] = false;
+document.addEventListener("touchend", function(){
+    keys["ArrowLeft"] = false;
+    keys["ArrowRight"] = false;
 });
 
-function update() {
-  if (keys["ArrowLeft"] && car.x > 0) car.x -= 5;
-  if (keys["ArrowRight"] && car.x + car.width < canvas.width)
-    car.x += 5;
+// Spawn obstacles
+function spawnObstacle(){
+    obstacles.push({
+        x: Math.random() * (canvas.width - 50),
+        y: -100,
+        width: 50,
+        height: 90,
+        speed: 6
+    });
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+setInterval(spawnObstacle, 1000);
 
-  // Road line
-  ctx.fillStyle = "white";
-  for (let i = 0; i < canvas.height; i += 40) {
-    ctx.fillRect(canvas.width / 2 - 5, i, 10, 20);
-  }
+// Main game loop
+function draw(){
 
-  // Car (simple red rectangle)
-  ctx.fillStyle = "red";
-  ctx.fillRect(car.x, car.y, car.width, car.height);
+    if(gameOver){
+        ctx.fillStyle="red";
+        ctx.font="30px Arial";
+        ctx.fillText("GAME OVER",80,300);
+        return;
+    }
 
-  update();
-  requestAnimationFrame(draw);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Moving road
+    roadOffset += 6;
+    if(roadOffset > 40) roadOffset = 0;
+
+    ctx.fillStyle="white";
+    for(let i=0;i<canvas.height;i+=40){
+        ctx.fillRect(canvas.width/2-5,i+roadOffset,10,20);
+    }
+
+    // Move car
+    if(keys["ArrowLeft"] && car.x > 0) car.x -= car.speed;
+    if(keys["ArrowRight"] && car.x + car.width < canvas.width)
+        car.x += car.speed;
+
+    // Draw car
+    ctx.fillStyle="red";
+    ctx.fillRect(car.x,car.y,car.width,car.height);
+
+    // Obstacles
+    obstacles.forEach((ob,index)=>{
+        ob.y += ob.speed;
+
+        ctx.fillStyle="yellow";
+        ctx.fillRect(ob.x,ob.y,ob.width,ob.height);
+
+        // Collision
+        if(
+            car.x < ob.x + ob.width &&
+            car.x + car.width > ob.x &&
+            car.y < ob.y + ob.height &&
+            car.y + car.height > ob.y
+        ){
+            gameOver = true;
+        }
+
+        // Remove off screen
+        if(ob.y > canvas.height){
+            obstacles.splice(index,1);
+            score++;
+        }
+    });
+
+    // Score
+    ctx.fillStyle="white";
+    ctx.font="18px Arial";
+    ctx.fillText("Score: " + score,10,25);
+
+    requestAnimationFrame(draw);
 }
 
 draw();
