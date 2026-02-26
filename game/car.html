@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>INSANE SPEED MODE</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      gap: 20px;
+      overflow: hidden;
+    }
+    canvas {
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game1"></canvas>
+<canvas id="game2"></canvas>
+
+<script>
+function createGame(canvasId, controls) {
+
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = 350;
+  canvas.height = 600;
+
+  const playerImg = new Image();
+  playerImg.src = "image/car.png";
+
+  const enemyImg = new Image();
+  enemyImg.src = "image/problem.png";
+
+  let car = { x: 150, y: 500, width: 50, height: 90, speed: 8 };
+  let obstacles = [];
+  let score = 0;
+  let gameOver = false;
+  let obstacleSpeed = 6;
+  let spawnRate = 800;
+  let roadOffset = 0;
+
+  function spawnObstacle() {
+    let x = Math.random() * (canvas.width - 50);
+    obstacles.push({
+      x: x,
+      y: -100,
+      width: 50,
+      height: 90,
+      speed: obstacleSpeed
+    });
+  }
+
+  function updateCar() {
+    if (keys[controls.left] && car.x > 0) car.x -= car.speed;
+    if (keys[controls.right] && car.x + car.width < canvas.width)
+      car.x += car.speed;
+  }
+
+  function updateObstacles() {
+    obstacles.forEach(ob => {
+      ob.y += ob.speed;
+
+      if (
+        car.x < ob.x + ob.width &&
+        car.x + car.width > ob.x &&
+        car.y < ob.y + ob.height &&
+        car.y + car.height > ob.y
+      ) {
+        gameOver = true;
+      }
+    });
+
+    obstacles = obstacles.filter(ob => ob.y < canvas.height);
+  }
+
+  function insaneDifficulty() {
+    obstacleSpeed += 0.5;
+    if (spawnRate > 200) spawnRate -= 20;
+    clearInterval(spawnInterval);
+    spawnInterval = setInterval(spawnObstacle, spawnRate);
+  }
+
+  function draw() {
+
+    if (gameOver) {
+      ctx.fillStyle = "red";
+      ctx.font = "28px Arial";
+      ctx.fillText("CRASHED!", 100, 280);
+      return;
+    }
+
+    // Screen shake at high speed
+    if (obstacleSpeed > 15) {
+      canvas.style.transform =
+        "translate(" +
+        (Math.random() * 10 - 5) +
+        "px," +
+        (Math.random() * 10 - 5) +
+        "px)";
+    } else {
+      canvas.style.transform = "translate(0,0)";
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Road lines
+    ctx.fillStyle = "white";
+    roadOffset += obstacleSpeed;
+    if (roadOffset > 40) roadOffset = 0;
+    for (let i = 0; i < canvas.height; i += 40) {
+      ctx.fillRect(canvas.width / 2 - 5, i + roadOffset, 10, 20);
+    }
+
+    updateCar();
+    updateObstacles();
+
+    ctx.drawImage(playerImg, car.x, car.y, car.width, car.height);
+    obstacles.forEach(ob => {
+      ctx.drawImage(enemyImg, ob.x, ob.y, ob.width, ob.height);
+    });
+
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.fillText("Score: " + score, 10, 25);
+
+    if (obstacleSpeed > 12) {
+      ctx.fillStyle = "yellow";
+      ctx.font = "20px Arial";
+      ctx.fillText("INSANE MODE!", 80, 60);
+    }
+
+    score++;
+
+    if (score % 300 === 0) insaneDifficulty();
+
+    requestAnimationFrame(draw);
+  }
+
+  let spawnInterval = setInterval(spawnObstacle, spawnRate);
+  draw();
+
+  return {
+    isGameOver: () => gameOver,
+    restart: function() {
+      obstacles = [];
+      score = 0;
+      obstacleSpeed = 6;
+      spawnRate = 800;
+      gameOver = false;
+      clearInterval(spawnInterval);
+      spawnInterval = setInterval(spawnObstacle, spawnRate);
+      draw();
+    }
+  };
+}
+
+// Keyboard
+let keys = {};
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
+
+// Left Player (WASD)
+const game1 = createGame("game1", {
+  left: "a",
+  right: "d"
+});
+
+// Right Player (Arrows)
+const game2 = createGame("game2", {
+  left: "ArrowLeft",
+  right: "ArrowRight"
+});
+
+// Restart
+document.addEventListener("keydown", e => {
+  if (e.key === "r" || e.key === "R") {
+    game1.restart();
+    game2.restart();
+  }
+});
+</script>
+
+</body>
+</html>
