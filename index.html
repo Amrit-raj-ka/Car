@@ -1,229 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INSANE SPEED MODE</title>
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      gap: 20px;
-      overflow: hidden;
-    }
-    canvas {
-      background: #222;
-    }
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Car Game</title>
+<style>
+  body {
+    margin: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  canvas {
+    background: #222;
+  }
+</style>
 </head>
 <body>
 
-<canvas id="game1"></canvas>
-<canvas id="game2"></canvas>
+<canvas id="game"></canvas>
 
 <script>
-function createGame(canvasId, controls) {
-
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext("2d");
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
 canvas.width = 350;
 canvas.height = 600;
-  
- const playerImg = new Image();
-const enemyImg = new Image();
 
-playerImg.src = "image/car.png";
-enemyImg.src = "image/problem.png";
-
-// Start game immediately
-draw();
-
-  let car = { x: 150, y: 500, width: 50, height: 90, speed: 8 };
-  let obstacles = [];
-  let score = 0;
-  let gameOver = false;
-  let obstacleSpeed = 6;
-  let spawnRate = 800;
-  let roadOffset = 0;
-
-  function spawnObstacle() {
-    let x = Math.random() * (canvas.width - 50);
-    obstacles.push({
-      x: x,
-      y: -100,
-      width: 50,
-      height: 90,
-      speed: obstacleSpeed
-    });
-  }
-
-  function updateCar() {
-    if (keys[controls.left] && car.x > 0) car.x -= car.speed;
-    if (keys[controls.right] && car.x + car.width < canvas.width)
-      car.x += car.speed;
-  }
-
-  function updateObstacles() {
-    obstacles.forEach(ob => {
-      ob.y += ob.speed;
-
-      if (
-        car.x < ob.x + ob.width &&
-        car.x + car.width > ob.x &&
-        car.y < ob.y + ob.height &&
-        car.y + car.height > ob.y
-      ) {
-        gameOver = true;
-      }
-    });
-
-    obstacles = obstacles.filter(ob => ob.y < canvas.height);
-  }
-
-  function insaneDifficulty() {
-    obstacleSpeed += 0.5;
-    if (spawnRate > 200) spawnRate -= 20;
-    clearInterval(spawnInterval);
-    spawnInterval = setInterval(spawnObstacle, spawnRate);
-  }
-
-  function draw() {
-
-    if (gameOver) {
-      ctx.fillStyle = "red";
-      ctx.font = "28px Arial";
-      ctx.fillText("CRASHED!", 100, 280);
-      return;
-    }
-
-    // Screen shake at high speed
-    if (obstacleSpeed > 15) {
-      canvas.style.transform =
-        "translate(" +
-        (Math.random() * 10 - 5) +
-        "px," +
-        (Math.random() * 10 - 5) +
-        "px)";
-    } else {
-      canvas.style.transform = "translate(0,0)";
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Road lines
-    ctx.fillStyle = "white";
-    roadOffset += obstacleSpeed;
-    if (roadOffset > 40) roadOffset = 0;
-    for (let i = 0; i < canvas.height; i += 40) {
-      ctx.fillRect(canvas.width / 2 - 5, i + roadOffset, 10, 20);
-    }
-
-    updateCar();
-    updateObstacles();
-
-    if (playerImg.complete && playerImg.naturalWidth !== 0) {
-  ctx.drawImage(playerImg, car.x, car.y, car.width, car.height);
-} else {
-  ctx.fillStyle = "red";
-  ctx.fillRect(car.x, car.y, car.width, car.height);
-}
-    obstacles.forEach(ob => {
-    if (enemyImg.complete && enemyImg.naturalWidth !== 0) {
-  ctx.drawImage(enemyImg, ob.x, ob.y, ob.width, ob.height);
-} else {
-  ctx.fillStyle = "blue";
-  ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
-}
-    });
-
-    ctx.fillStyle = "white";
-    ctx.font = "16px Arial";
-    ctx.fillText("Score: " + score, 10, 25);
-
-    if (obstacleSpeed > 12) {
-      ctx.fillStyle = "yellow";
-      ctx.font = "20px Arial";
-      ctx.fillText("INSANE MODE!", 80, 60);
-    }
-
-    score++;
-
-    if (score % 300 === 0) insaneDifficulty();
-
-    requestAnimationFrame(draw);
-  }
-
-  let spawnInterval = setInterval(spawnObstacle, spawnRate);
-  
-
-  return {
-    isGameOver: () => gameOver,
-    restart: function() {
-      obstacles = [];
-      score = 0;
-      obstacleSpeed = 6;
-      spawnRate = 800;
-      gameOver = false;
-      clearInterval(spawnInterval);
-      spawnInterval = setInterval(spawnObstacle, spawnRate);
-     
-    }
-  };
-}
-
-// Keyboard
+let car = { x: 150, y: 500, width: 50, height: 90 };
 let keys = {};
+
 document.addEventListener("keydown", e => keys[e.key] = true);
 document.addEventListener("keyup", e => keys[e.key] = false);
-  // Mobile Touch Controls
-document.addEventListener("touchstart", function(e) {
-    const screenWidth = window.innerWidth;
-    const touchX = e.touches[0].clientX;
 
-    if (touchX < screenWidth / 2) {
-        // Left side touched
-        keys["a"] = true;
-    } else {
-        // Right side touched
-        keys["d"] = true;
-    }
+// Mobile touch
+document.addEventListener("touchstart", e => {
+  const x = e.touches[0].clientX;
+  if (x < window.innerWidth / 2) keys["ArrowLeft"] = true;
+  else keys["ArrowRight"] = true;
 });
 
-document.addEventListener("touchend", function() {
-    keys["a"] = false;
-    keys["d"] = false;
+document.addEventListener("touchend", () => {
+  keys["ArrowLeft"] = false;
+  keys["ArrowRight"] = false;
 });
 
-// Left Player (WASD)
-const game1 = createGame("game1", {
-  left: "a",
-  right: "d"
-});
+function update() {
+  if (keys["ArrowLeft"] && car.x > 0) car.x -= 5;
+  if (keys["ArrowRight"] && car.x + car.width < canvas.width)
+    car.x += 5;
+}
 
-// Right Player (Arrows)
-const game2 = createGame("game2", {
-  left: "ArrowLeft",
-  right: "ArrowRight"
-});
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// Restart
-document.addEventListener("keydown", e => {
-  if (e.key === "r" || e.key === "R") {
-    game1.restart();
-    game2.restart();
+  // Road line
+  ctx.fillStyle = "white";
+  for (let i = 0; i < canvas.height; i += 40) {
+    ctx.fillRect(canvas.width / 2 - 5, i, 10, 20);
   }
-});
+
+  // Car (simple red rectangle)
+  ctx.fillStyle = "red";
+  ctx.fillRect(car.x, car.y, car.width, car.height);
+
+  update();
+  requestAnimationFrame(draw);
+}
+
+draw();
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
