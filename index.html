@@ -172,16 +172,16 @@ document.addEventListener("touchstart", function(e) {
 
     if (touchX < screenWidth / 2) {
         // Left side touched
-        keys["ArrowLeft"] = true;
+        keys["a"] = true;
     } else {
         // Right side touched
-        keys["ArrowRight"] = true;
+        keys["d"] = true;
     }
 });
 
 document.addEventListener("touchend", function() {
-    keys["ArrowLeft"] = false;
-    keys["ArrowRight"] = false;
+    keys["a"] = false;
+    keys["d"] = false;
 });
 
 // Left Player (WASD)
@@ -207,4 +207,5 @@ document.addEventListener("keydown", e => {
 
 </body>
 </html>
+
 
