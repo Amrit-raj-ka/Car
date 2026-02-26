@@ -3,58 +3,58 @@
 <head>
 <title>Car Game</title>
 <style>
-body {
-  margin: 0;
-  background: black;
-  overflow: hidden;
+body{
+  margin:0;
+  background:black;
+  overflow:hidden;
 }
 
-#gameArea {
-  width: 300px;
-  height: 600px;
-  background: #222;
-  margin: auto;
-  position: relative;
-  overflow: hidden;
+#gameArea{
+  width:300px;
+  height:600px;
+  background:#222;
+  margin:auto;
+  position:relative;
+  overflow:hidden;
 }
 
-.line {
-  width: 10px;
-  height: 100px;
-  background: white;
-  position: absolute;
-  left: 145px;
+.line{
+  width:10px;
+  height:100px;
+  background:white;
+  position:absolute;
+  left:145px;
 }
 
-#car {
-  width: 50px;
-  height: 90px;
-  position: absolute;
-  bottom: 10px;
-  left: 125px;
+#car{
+  width:50px;
+  height:90px;
+  background:red;
+  position:absolute;
+  bottom:10px;
+  left:125px;
 }
 
-.enemy {
-  width: 50px;
-  height: 90px;
-  position: absolute;
+.enemy{
+  width:50px;
+  height:90px;
+  background:yellow;
+  position:absolute;
 }
-
-#restartBtn {
-  position: absolute;
-  top: 250px;
-  left: 90px;
-  padding: 10px 20px;
-  font-size: 18px;
-  display: none;
+#restartBtn{
+  position:absolute;
+  top:260px;
+  left:100px;
+  padding:10px 20px;
+  font-size:18px;
+  display:none;
 }
 </style>
 </head>
-
 <body>
 
 <div id="gameArea">
-  <img id="car" src="https://i.imgur.com/7QZ7Z6F.png">
+  <div id="car"></div>
   <button id="restartBtn">Restart</button>
 </div>
 
@@ -68,7 +68,7 @@ let speed = 5;
 let gameOver = false;
 let enemies = [];
 
-// Create road lines
+// Road lines
 for(let i=0;i<6;i++){
   let line = document.createElement("div");
   line.classList.add("line");
@@ -76,9 +76,7 @@ for(let i=0;i<6;i++){
   gameArea.appendChild(line);
 }
 
-document.addEventListener("keydown", moveCar);
-
-function moveCar(e){
+document.addEventListener("keydown", function(e){
   if(gameOver) return;
 
   if(e.key === "ArrowLeft" && carLeft > 0){
@@ -89,11 +87,10 @@ function moveCar(e){
   }
 
   car.style.left = carLeft + "px";
-}
+});
 
 function createEnemy(){
-  let enemy = document.createElement("img");
-  enemy.src = "https://i.imgur.com/Z6X5Q9F.png";
+  let enemy = document.createElement("div");
   enemy.classList.add("enemy");
   enemy.style.top = "-100px";
   enemy.style.left = Math.floor(Math.random()*6)*50 + "px";
@@ -114,7 +111,6 @@ function moveEnemies(){
       endGame();
     }
 
-    // Remove if off screen
     if(enemyTop > 600){
       enemy.remove();
       enemies.splice(index,1);
@@ -134,10 +130,8 @@ function moveLines(){
 
 function gameLoop(){
   if(gameOver) return;
-
   moveLines();
   moveEnemies();
-
   requestAnimationFrame(gameLoop);
 }
 
