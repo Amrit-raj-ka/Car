@@ -1,153 +1,217 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INSANE SPEED MODE</title>
-
-<style>
-body{
-    margin:0;
-    background:black;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    overflow:hidden;
-}
-
-canvas{
-    background:#222;
-}
-</style>
+  <title>INSANE SPEED MODE</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      gap: 20px;
+      overflow: hidden;
+    }
+    canvas {
+      background: #222;
+    }
+  </style>
 </head>
-
 <body>
 
-<canvas id="game"></canvas>
+<canvas id="game1"></canvas>
+<canvas id="game2"></canvas>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+function createGame(canvasId, controls) {
 
-canvas.width = 350;
-canvas.height = 600;
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext("2d");
 
-//Load car image
-const carImg = new Image();
-carImg.src = "images/car.png";
+  canvas.width = 350;
+  canvas.height = 600;
 
-let car = {
-    x:150,
-    y:500,
-    width:50,
-    height:90,
-    speed:8
-};
+  const playerImg = new Image();
+  playerImg.src = "image/car.png";
 
-let obstacles = [];
-let roadOffset = 0;
-let score = 0;
-let gameOver = false;
+  const enemyImg = new Image();
+  enemyImg.src = "image/problem.png";
 
+  let car = { x: 150, y: 500, width: 50, height: 90, speed: 8 };
+  let obstacles = [];
+  let score = 0;
+  let gameOver = false;
+  let obstacleSpeed = 6;
+  let spawnRate = 800;
+  let roadOffset = 0;
+
+  function spawnObstacle() {
+    let x = Math.random() * (canvas.width - 50);
+    obstacles.push({
+      x: x,
+      y: -100,
+      width: 50,
+      height: 90,
+      speed: obstacleSpeed
+    });
+  }
+
+  function updateCar() {
+    if (keys[controls.left] && car.x > 0) car.x -= car.speed;
+    if (keys[controls.right] && car.x + car.width < canvas.width)
+      car.x += car.speed;
+  }
+
+  function updateObstacles() {
+    obstacles.forEach(ob => {
+      ob.y += ob.speed;
+
+      if (
+        car.x < ob.x + ob.width &&
+        car.x + car.width > ob.x &&
+        car.y < ob.y + ob.height &&
+        car.y + car.height > ob.y
+      ) {
+        gameOver = true;
+      }
+    });
+
+    obstacles = obstacles.filter(ob => ob.y < canvas.height);
+  }
+
+  function insaneDifficulty() {
+    obstacleSpeed += 0.5;
+    if (spawnRate > 200) spawnRate -= 20;
+    clearInterval(spawnInterval);
+    spawnInterval = setInterval(spawnObstacle, spawnRate);
+  }
+
+  function draw() {
+
+    if (gameOver) {
+      ctx.fillStyle = "red";
+      ctx.font = "28px Arial";
+      ctx.fillText("CRASHED!", 100, 280);
+      return;
+    }
+
+    // Screen shake at high speed
+    if (obstacleSpeed > 15) {
+      canvas.style.transform =
+        "translate(" +
+        (Math.random() * 10 - 5) +
+        "px," +
+        (Math.random() * 10 - 5) +
+        "px)";
+    } else {
+      canvas.style.transform = "translate(0,0)";
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Road lines
+    ctx.fillStyle = "white";
+    roadOffset += obstacleSpeed;
+    if (roadOffset > 40) roadOffset = 0;
+    for (let i = 0; i < canvas.height; i += 40) {
+      ctx.fillRect(canvas.width / 2 - 5, i + roadOffset, 10, 20);
+    }
+
+    updateCar();
+    updateObstacles();
+
+    ctx.drawImage(playerImg, car.x, car.y, car.width, car.height);
+    obstacles.forEach(ob => {
+      ctx.drawImage(enemyImg, ob.x, ob.y, ob.width, ob.height);
+    });
+
+    ctx.fillStyle = "white";
+    ctx.font = "16px Arial";
+    ctx.fillText("Score: " + score, 10, 25);
+
+    if (obstacleSpeed > 12) {
+      ctx.fillStyle = "yellow";
+      ctx.font = "20px Arial";
+      ctx.fillText("INSANE MODE!", 80, 60);
+    }
+
+    score++;
+
+    if (score % 300 === 0) insaneDifficulty();
+
+    requestAnimationFrame(draw);
+  }
+
+  let spawnInterval = setInterval(spawnObstacle, spawnRate);
+  draw();
+
+  return {
+    isGameOver: () => gameOver,
+    restart: function() {
+      obstacles = [];
+      score = 0;
+      obstacleSpeed = 6;
+      spawnRate = 800;
+      gameOver = false;
+      clearInterval(spawnInterval);
+      spawnInterval = setInterval(spawnObstacle, spawnRate);
+      draw();
+    }
+  };
+}
+
+function addSwipeControls(canvasId, leftKey, rightKey) {
+  const canvas = document.getElementById(canvasId);
+  let startX = null;
+
+  canvas.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  });
+
+  canvas.addEventListener("touchend", e => {
+    let endX = e.changedTouches[0].clientX;
+    if (startX && endX) {
+      if (endX < startX - 50) {
+        keys[leftKey] = true;
+        setTimeout(() => keys[leftKey] = false, 200);
+      } else if (endX > startX + 50) {
+        keys[rightKey] = true;
+        setTimeout(() => keys[rightKey] = false, 200);
+      }
+    }
+    startX = null;
+  });
+}
+
+// Apply swipe controls
+addSwipeControls("game1", "a", "d");
+addSwipeControls("game2", "ArrowLeft", "ArrowRight");
+
+// Keyboard
 let keys = {};
-
-// Keyboard controls
 document.addEventListener("keydown", e => keys[e.key] = true);
 document.addEventListener("keyup", e => keys[e.key] = false);
 
-// Mobile touch controls
-document.addEventListener("touchstart", function(e){
-    const touchX = e.touches[0].clientX;
-    if(touchX < window.innerWidth/2){
-        keys["ArrowLeft"] = true;
-    }else{
-        keys["ArrowRight"] = true;
-    }
+// Left Player (WASD)
+const game1 = createGame("game1", {
+  left: "a",
+  right: "d"
 });
 
-document.addEventListener("touchend", function(){
-    keys["ArrowLeft"] = false;
-    keys["ArrowRight"] = false;
+// Right Player (Arrows)
+const game2 = createGame("game2", {
+  left: "ArrowLeft",
+  right: "ArrowRight"
 });
 
-// Spawn obstacles
-function spawnObstacle(){
-    obstacles.push({
-        x: Math.random() * (canvas.width - 50),
-        y: -100,
-        width: 50,
-        height: 90,
-        speed: 6
-    });
-}
-
-setInterval(spawnObstacle, 1000);
-
-// Main game loop
-function draw(){
-
-    if(gameOver){
-        ctx.fillStyle="red";
-        ctx.font="30px Arial";
-        ctx.fillText("GAME OVER",80,300);
-        return;
-    }
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // Moving road
-    roadOffset += 6;
-    if(roadOffset > 40) roadOffset = 0;
-
-    ctx.fillStyle="white";
-    for(let i=0;i<canvas.height;i+=40){
-        ctx.fillRect(canvas.width/2-5,i+roadOffset,10,20);
-    }
-
-    // Move car
-    if(keys["ArrowLeft"] && car.x > 0) car.x -= car.speed;
-    if(keys["ArrowRight"] && car.x + car.width < canvas.width)
-        car.x += car.speed;
-
-    // Draw car
-    ctx.drawImage(carImg, car.x, car.y, car.width, car.height);
-
-    // Obstacles
-    obstacles.forEach((ob,index)=>{
-        ob.y += ob.speed;
-
-        ctx.fillStyle="yellow";
-        ctx.fillRect(ob.x,ob.y,ob.width,ob.height);
-
-        // Collision
-        if(
-            car.x < ob.x + ob.width &&
-            car.x + car.width > ob.x &&
-            car.y < ob.y + ob.height &&
-            car.y + car.height > ob.y
-        ){
-            gameOver = true;
-        }
-
-        // Remove off screen
-        if(ob.y > canvas.height){
-            obstacles.splice(index,1);
-            score++;
-        }
-    });
-
-    // Score
-    ctx.fillStyle="white";
-    ctx.font="18px Arial";
-    ctx.fillText("Score: " + score,10,25);
-
-    requestAnimationFrame(draw);
-}
-
-// Start game only after image loads
-carImg.onload = function(){
-draw();
-};
+// Restart
+document.addEventListener("keydown", e => {
+  if (e.key === "r" || e.key === "R") {
+    game1.restart();
+    game2.restart();
+  }
+});
 </script>
 
 </body>
